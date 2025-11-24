@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- MODELOS ---
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  fullName  String
+  role      String   @default("athlete") // athlete, coach, admin_cancha, super_admin
+  avatar    String?
+  createdAt DateTime @default(now())
+  
+  teams     Team[]
+  bookings  Booking[]
+}
+
+model Venue {
+  id        Int      @id @default(autoincrement())
+  name      String
+  location  String
+  image     String?
+  status    String   @default("active")
+  settings  Json?
+  createdAt DateTime @default(now())
+
+  bookings  Booking[]
+}
+
+model Team {
+  id        Int      @id @default(autoincrement())
+  name      String
+  sport     String
+  category  String
+  logo      String?
+  banner    String?
+  stats     Json?
+  createdAt DateTime @default(now())
+
+  coachId   Int
+  coach     User     @relation(fields: [coachId], references: [id])
+  players   Player[]
+}
+
+model Player {
+  id        Int      @id @default(autoincrement())
+  name      String
+  number    Int
+  position  String
+  image     String?
+  stats     Json?
+  
+  teamId    Int
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
+
+model Booking {
+  id            Int      @id @default(autoincrement())
+  title         String
+  startTime     DateTime
+  endTime       DateTime
+  status        String   @default("pending")
+  sportType     String?
+  description   String?
+  banner        String?
+  teamsSnapshot Json?
+  createdAt     DateTime @default(now())
+
+  userId        Int?
+  user          User?    @relation(fields: [userId], references: [id])
+  venueId       Int
+  venue         Venue    @relation(fields: [venueId], references: [id])
+}
